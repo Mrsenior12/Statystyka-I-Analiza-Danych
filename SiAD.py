@@ -5,47 +5,35 @@ import numpy as np
 def read_cs(file_name):
     return pd.read_csv(file_name,index_col = None)
 
-def count_intent(df,col_name = "intent"):
-    cols_count = {}
-    col = df[col_name]
-
-    for entry in col:
-        if entry in cols_count.keys():
-            cols_count[entry] += 1
-        else:
-            cols_count[entry] = 1
-    return cols_count
-
-def count_mean(dict,cases):
-    means = {}
-    for entry in dict.keys():
-        means[entry] = round(dict.get(entry)/cases,4)
-    return means
-
-def description():
-    print("""
-            id -> identyfikator
-            date -> data sprzedazy dzialki
-            price -> cena podana w dolarach
-            bedrooms -> ilosc sypialni w domu
-            bathrooms -> ilosc lazienek w domu
-            sqft_living -> powierzchnia domu w stopach kwadratowych
-            sqft_lot -> powierzchnia calkowita
-            floors -> ilość pięter w domu
-            waterfront -> czy dom ma widok na wode
-            view -> ilość osob ktore oglądały dom przed kupnem, z powodu niejasności skąd pochodzą dane te kolumnę pominę dla bezpieczeństwa
-            condition -> nadawana na podstawie stponia 'grade' i roku zbudowania oznacza jak 'długo' dom wytrzyma bez remontu
-            grade -> stopien nadawany na podsatwie uzytych mateirałów , im wyższy tym lepsze materiały zostały użyte
-            sqft_above -> powierzchnia górnych kondygnacji
-            sqft_basement -> powierzchnia piwnicy
-            yr_built -> rok zbudowania
-            yr_renovated -> rok remontu
-            zipcode -> kod pocztowy
-            lat -> szerokogsc geograficzna
-            long -> dlogosc geograficzna
-            sqft_living15 -> srednia powierzchnia w obrębie 15 domow
-            sqft_lot15 -> srednia powierzchnia calkkowita 15 najbliższych działek 
-            """)
+def description(nr):
+    if nr == 0:
+        print("""
+                id -> identyfikator
+                date -> data sprzedazy dzialki
+                price -> cena podana w dolarach
+                bedrooms -> ilosc sypialni w domu
+                bathrooms -> ilosc lazienek w domu
+                sqft_living -> powierzchnia domu w stopach kwadratowych
+                sqft_lot -> powierzchnia calkowita
+                floors -> ilość pięter w domu
+                waterfront -> czy dom ma widok na wode
+                view -> ilość osob ktore oglądały dom przed kupnem, z powodu niejasności skąd pochodzą dane te kolumnę pominę dla bezpieczeństwa
+                condition -> nadawana na podstawie stponia 'grade' i roku zbudowania oznacza jak 'długo' dom wytrzyma bez remontu
+                grade -> stopien nadawany na podsatwie uzytych mateirałów , im wyższy tym lepsze materiały zostały użyte
+                sqft_above -> powierzchnia górnych kondygnacji
+                sqft_basement -> powierzchnia piwnicy
+                yr_built -> rok zbudowania
+                yr_renovated -> rok remontu
+                zipcode -> kod pocztowy
+                lat -> szerokogsc geograficzna
+                long -> dlogosc geograficzna
+                sqft_living15 -> srednia powierzchnia w obrębie 15 domow
+                sqft_lot15 -> srednia powierzchnia calkkowita 15 najbliższych działek 
+                """)
+    elif nr == 1:
+        print("""
+                Mediana wynosi 1975, z tego powodu zamierzam analizować cenę domów sprzed oraz po roku 1975
+        """)
 
 # funkcja ma za zadanie zrobienie szeregów rozdzielczych dla wsz
 #Source od Data:
@@ -59,7 +47,7 @@ pd.set_option('display.max_columns',None)
 columns = list(dataframe)
 print(columns,"\n")
 print(dataframe.head(3))
-description()
+description(0)
 print("\nNie będę analizwoal kolumn 'DATE','ZIPCODE','LAT','LONG',ponieważ nie stanowią one mojego zainteresowania.")
 dataframe.drop(['date','zipcode','lat','long'],axis="columns",inplace=True)
 
@@ -86,11 +74,15 @@ plt.show()
 
 mediana = dataframe["yr_built"].median()
 print(mediana)
-#mediana wynosi 1975 więc będziemy porównywać dopmy wybudowane przed i po 1975r
-
+description(1)
 before_1975 = dataframe[dataframe["yr_built"] < 1975]
 after_1975 = dataframe[dataframe["yr_built"] >= 1975]
-
+before_1975 = before_1975.sample(n=5000)
+after_1975 = after_1975.sample(n=5000)
+fig2,axa2 = plt.subplots(1,2,sharey=True)
+axa2[0].hist(before_1975["price"],bins=25)
+axa2[1].hist(after_1975["price"],bins=25)
+plt.show()
 #print(dataframe.iloc[:,1].head(3))
 #print("Kolejnym krokiem, jest obliczenie statystyk opisowych.")
 #print(dataframe.describe())
