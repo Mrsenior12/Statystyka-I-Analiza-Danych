@@ -52,6 +52,12 @@ def test_z(df,year):
         print("odrzucamy hipoteze zerowa, poniewaz znajduje sie ona w obszarze krytycznym ktry wynosi: {}".format(crit_value))
     else:
         print("przyjmujemy hipoteze zerowa, poniewaz nie znajduje sie ona w obszarze krytycznym ktory wynosi: {}".format(crit_value))
+
+def korelacja(b_1975,a_1975,mediana):
+    korelacja_przed = np.corrcoef(b_1975["price"],b_1975["sqft_living"])
+    korelacja_po = np.corrcoef(a_1975["price"],a_1975["sqft_living"])
+    print("Korelacja ceny do 'sqft_living', przed rokiem 1975:\n",korelacja_przed[0][1],"\nKorelacja ceny do 'sqft_living', po roku 1975:\n",korelacja_po[0][1])
+    print("mozna zauwazyc ze korelacja ceny domow do ich wielkosci wzrosla po roku {}".format(mediana))
     
 # funkcja ma za zadanie zrobienie szeregów rozdzielczych dla wsz
 #Source od Data:
@@ -89,10 +95,10 @@ axa1.set_xlabel("Value")
 axa1.set_title("Distribution of prices")
 plt.show()
 
-mediana = dataframe["yr_built"].median()
-print("mediana wynosi roku budowy wynosi {}. Z tego powodu bedziemy analizowac ceny domów sprzed oraz po roku {}\n".format(mediana,mediana))
-before_1975 = dataframe[dataframe["yr_built"] < mediana]
-after_1975 = dataframe[dataframe["yr_built"] >= mediana]
+mediana_lat = dataframe["yr_built"].median()
+print("mediana wynosi roku budowy wynosi {}. Z tego powodu bedziemy analizowac ceny domów sprzed oraz po roku {}\n".format(mediana_lat,mediana_lat))
+before_1975 = dataframe[dataframe["yr_built"] < mediana_lat]
+after_1975 = dataframe[dataframe["yr_built"] >= mediana_lat]
 before_1975 = before_1975.sample(n=5000)
 after_1975 = after_1975.sample(n=5000)
 fig2,axa2 = plt.subplots(1,2,sharey=True)
@@ -100,11 +106,8 @@ axa2[0].hist(before_1975["price"],bins=25)
 axa2[1].hist(after_1975["price"],bins=25)
 plt.show()
 
-korelacja_przed = np.corrcoef(before_1975["price"],before_1975["sqft_living"])
-korelacja_po = np.corrcoef(after_1975["price"],after_1975["sqft_living"])
-print("Korelacja ceny do 'sqft_living', przed rokiem 1975:\n",korelacja_przed[0][1],"\nKorelacja ceny do 'sqft_living', po roku 1975:\n",korelacja_po[0][1])
-print("mozna zauwazyc ze korelacja ceny domow do ich wielkosci wzrosla po roku {}".format(mediana))
-test_z(dataframe,mediana)
+korelacja(before_1975,after_1975,mediana_lat)
+test_z(dataframe,mediana_lat)
 #before_1975 = dataframe[(dataframe["yr_built"] < 1975 ) & (dataframe["yr_built"] >= 1965)]
 #print(dataframe.iloc[:,1].head(3))
 #print("Kolejnym krokiem, jest obliczenie statystyk opisowych.")
