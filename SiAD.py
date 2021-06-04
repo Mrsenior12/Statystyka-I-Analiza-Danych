@@ -1,10 +1,11 @@
 from math import sqrt
+from os import stat
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import statistics as stats
 from scipy import stats
-from scipy.stats.stats import normaltest
+from scipy.stats.stats import mannwhitneyu
 
 def read_cs(file_name):
     return pd.read_csv(file_name,index_col = None)
@@ -34,9 +35,14 @@ def description(nr):
         sqft_living15 -> srednia powierzchnia w obrębie 15 domow
         sqft_lot15 -> srednia powierzchnia calkkowita 15 najbliższych działek 
                 """)
+def oblicz_bin(df):
+    range = df.max() - df.min()
+    n = len(df)
+    std = df.std()
+    return round(range * np.cbrt(n)/(3.49*std),0)
 
 def test_z(df,year):
-    cena = df[df["yr_built"] <year]["price"]
+    cena = df[df["yr_built"] == year]["price"]
     cena_srednia = round(cena.mean(),2)
     H0 = cena_srednia - 5000
     print("\nZaobserwowano że srednia cena domów do roku: {} wynosiła: {}.".format(year,cena_srednia))
@@ -58,7 +64,31 @@ def korelacja(b_1975,a_1975,mediana):
     korelacja_po = np.corrcoef(a_1975["price"],a_1975["sqft_living"])
     print("Korelacja ceny do 'sqft_living', przed rokiem 1975:\n",korelacja_przed[0][1],"\nKorelacja ceny do 'sqft_living', po roku 1975:\n",korelacja_po[0][1])
     print("mozna zauwazyc ze korelacja ceny domow do ich wielkosci wzrosla po roku {}".format(mediana))
-    
+
+def test_MannWhitney(df,year1 = 1975,year2 = 2000):
+    print("\nNie wiadomo czy nasze dane posiadaj rozklad normalny.")
+    print("Chcemy sprawdzic czy rozklad cen domow zbudowanych w roku {} jest rowny rozkladowi domow zbudowanych w {}.".format(year1,year2))
+    print("Aby to sprawdzic nalezy zastosowac test nieparametryczny, w tym przypadku zastosowalem test U Manna-Whittneya.")
+    print("Sprawdzimy czy rozklady sa sobie rowne.")
+    alpha = 0.05
+    sample1 = df[df["yr_built"] == year1]["price"]
+    sample2 = df[df["yr_built"] == year2]["price"]
+
+    stat,p = mannwhitneyu(sample1,sample2)
+    if p > alpha:
+        print("Takie same dystrybuant, nie mozna odrzucic hipotezy zerowej\n")
+    else:
+        print("rozne dystrybuanty, nalezy odrzucic hipoteze zerowa\n")
+
+    fig3,axa3 = plt.subplots(1,2,sharey=True)
+    axa3[0].hist(sample1,bins=int(oblicz_bin(sample1)))
+    axa3[1].hist(sample2,bins=int(oblicz_bin(sample2)))
+    axa3[0].set_xlabel("Price")
+    axa3[1].set_xlabel("Price")
+    axa3[0].set_ylabel("Count")
+    axa3[0].set_title("{}".format(year1))
+    axa3[1].set_title("{}".format(year2))
+    plt.show()
 # funkcja ma za zadanie zrobienie szeregów rozdzielczych dla wsz
 #Source od Data:
 #https://www.kaggle.com/swathiachath/kc-housesales-data/d
@@ -80,16 +110,12 @@ print(dataframe.describe().loc[["min","max","mean","std","25%","50%","75%"]],"\n
 
 
 fig,axa = plt.subplots(1,1)
-#axa[0,0].hist(dataframe["price"],bins=20)
-#axa[0,1].boxplot(dataframe["bedrooms"])
-#axa[1,0].hist(dataframe["bathrooms"])
-#axa[1,1].hist(dataframe["sqft_living"])
 axa.boxplot(dataframe["price"])
 axa.set_title("Box plot of prices")
 axa.set_ylabel("Value")
 
 fig1,axa1 = plt.subplots(1,1)
-axa1.hist(dataframe["price"],bins=20,color="red")
+axa1.hist(dataframe["price"],bins=int(oblicz_bin(dataframe["price"])),color="red")
 axa1.set_ylabel("Count")
 axa1.set_xlabel("Value")
 axa1.set_title("Distribution of prices")
@@ -102,30 +128,10 @@ after_1975 = dataframe[dataframe["yr_built"] >= mediana_lat]
 before_1975 = before_1975.sample(n=5000)
 after_1975 = after_1975.sample(n=5000)
 fig2,axa2 = plt.subplots(1,2,sharey=True)
-axa2[0].hist(before_1975["price"],bins=25)
-axa2[1].hist(after_1975["price"],bins=25)
+axa2[0].hist(before_1975["price"],bins=int(oblicz_bin(before_1975["price"])))
+axa2[1].hist(after_1975["price"],bins=int(oblicz_bin(after_1975["price"])))
 plt.show()
 
 korelacja(before_1975,after_1975,mediana_lat)
 test_z(dataframe,mediana_lat)
-#before_1975 = dataframe[(dataframe["yr_built"] < 1975 ) & (dataframe["yr_built"] >= 1965)]
-#print(dataframe.iloc[:,1].head(3))
-#print("Kolejnym krokiem, jest obliczenie statystyk opisowych.")
-#print(dataframe.describe())
-#intent = count_intent(dataframe)
-#how_many_cases = len(dataframe["intent"])
-#means = count_mean(intent,how_many_cases)
-
-#suicides_firs_half = dataframe[(dataframe["intent"] == "Suicide") & (dataframe["month"] < 6)]
-#suicides_second_half = dataframe[(dataframe["intent"] == "Suicide") & (dataframe["month"] >= 6)]
-
-#nation = dataframe.groupby(["race"]).size()
-#print(nation)
-#fig,axa = plt.subplots(1,2)
-#axa[0].hist(suicides_firs_half["month"],bins=6)
-#axa[1].hist(suicides_second_half["month"],bins=6)
-
-#axa[0].set_xlabel("miesiac")
-#axa[0].set_ylabel("ilosc samobojstw")
-#axa[1].set_xlabel("miesiac")
-
+test_MannWhitney(dataframe,1918,2014)
