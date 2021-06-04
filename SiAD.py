@@ -1,8 +1,10 @@
+from math import sqrt
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import statistics as stats
 from scipy import stats
+from scipy.stats.stats import normaltest
 
 def read_cs(file_name):
     return pd.read_csv(file_name,index_col = None)
@@ -32,14 +34,25 @@ def description(nr):
         sqft_living15 -> srednia powierzchnia w obrębie 15 domow
         sqft_lot15 -> srednia powierzchnia calkkowita 15 najbliższych działek 
                 """)
-    elif nr == 1:
-        print("""
-        Mediana wynosi 1975, z tego powodu zamierzam analizować cenę domów sprzed oraz po roku 1975
-        """)
-    elif nr == 2:
-        print("""
-        Można zauważyć że korelacja ceny do powierzchni domu wzrosła 
-        """)
+
+def test_z(df,year):
+    cena = df[df["yr_built"] <year]["price"]
+    cena_srednia = round(cena.mean(),2)
+    H0 = cena_srednia - 5000
+    print("\nZaobserwowano że srednia cena domów do roku: {} wynosiła: {}.".format(year,cena_srednia))
+    print("czy w takim takkim razie można twierdzić że średnia wynosi {}".format(H0))
+    print("poziom istotności w tym teście wynosi 0.01\n")
+    alfa = 0.01
+    crit_value = round(2.326347874,3)
+    licznosc = len(cena)
+    odchylenie_std = cena.std()
+    wartosc_statystyki = round((cena_srednia - H0)/odchylenie_std*sqrt(licznosc),3)
+    print("wartosc statystyki, otrzymana przy wykorzystaniu testu Z wynosi: {}".format(wartosc_statystyki))
+    if(wartosc_statystyki > crit_value):
+        print("odrzucamy hipoteze zerowa, poniewaz znajduje sie ona w obszarze krytycznym ktry wynosi: {}".format(crit_value))
+    else:
+        print("przyjmujemy hipoteze zerowa, poniewaz nie znajduje sie ona w obszarze krytycznym ktory wynosi: {}".format(crit_value))
+    
 # funkcja ma za zadanie zrobienie szeregów rozdzielczych dla wsz
 #Source od Data:
 #https://www.kaggle.com/swathiachath/kc-housesales-data/d
@@ -77,10 +90,9 @@ axa1.set_title("Distribution of prices")
 plt.show()
 
 mediana = dataframe["yr_built"].median()
-print(mediana)
-description(1)
-before_1975 = dataframe[dataframe["yr_built"] < 1975]
-after_1975 = dataframe[dataframe["yr_built"] >= 1975]
+print("mediana wynosi roku budowy wynosi {}. Z tego powodu bedziemy analizowac ceny domów sprzed oraz po roku {}\n".format(mediana,mediana))
+before_1975 = dataframe[dataframe["yr_built"] < mediana]
+after_1975 = dataframe[dataframe["yr_built"] >= mediana]
 before_1975 = before_1975.sample(n=5000)
 after_1975 = after_1975.sample(n=5000)
 fig2,axa2 = plt.subplots(1,2,sharey=True)
@@ -91,7 +103,8 @@ plt.show()
 korelacja_przed = np.corrcoef(before_1975["price"],before_1975["sqft_living"])
 korelacja_po = np.corrcoef(after_1975["price"],after_1975["sqft_living"])
 print("Korelacja ceny do 'sqft_living', przed rokiem 1975:\n",korelacja_przed[0][1],"\nKorelacja ceny do 'sqft_living', po roku 1975:\n",korelacja_po[0][1])
-
+print("mozna zauwazyc ze korelacja ceny domow do ich wielkosci wzrosla po roku {}".format(mediana))
+test_z(dataframe,mediana)
 #before_1975 = dataframe[(dataframe["yr_built"] < 1975 ) & (dataframe["yr_built"] >= 1965)]
 #print(dataframe.iloc[:,1].head(3))
 #print("Kolejnym krokiem, jest obliczenie statystyk opisowych.")
