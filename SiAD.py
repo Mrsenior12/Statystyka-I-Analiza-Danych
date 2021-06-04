@@ -4,8 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import statistics as stats
-from scipy import stats
-from scipy.stats.stats import mannwhitneyu
+from scipy.stats import mannwhitneyu
 
 def read_cs(file_name):
     return pd.read_csv(file_name,index_col = None)
@@ -89,9 +88,8 @@ def test_MannWhitney(df,year1 = 1975,year2 = 2000):
     axa3[0].set_title("{}".format(year1))
     axa3[1].set_title("{}".format(year2))
     plt.show()
-# funkcja ma za zadanie zrobienie szeregów rozdzielczych dla wsz
 #Source od Data:
-#https://www.kaggle.com/swathiachath/kc-housesales-data/d
+#https://www.kaggle.com/swathiachath/kc-housesales-data/data
 print("EKSPLORACJA DANYCH:")
 print("Będę analizował dane dotyczące domów w king County w USA\n"
       "Opis kolumn wraz z kilkoma pierwszymi wierszami znajduje sie ponizej.\n")
